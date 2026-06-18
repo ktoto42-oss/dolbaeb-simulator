@@ -70,6 +70,16 @@ async fn main() {
     let mut camera = Camera2D::default();
     camera.zoom = vec2(2.0 / screen_width(), 2.0 / screen_height());
 
+    // Текстуры 
+    //let player_texture: Texture2D = load_texture("assets/player.png").await.unwrap();
+    let stash_texture: Texture2D = load_texture("assets/zip.png").await.unwrap();
+    let carpet_texture: Texture2D = load_texture("assets/carpet.png").await.unwrap();
+
+    // Отключение размытия т.к пиксель арт
+    //player_texture.set_filter(FilterMode::Nearest);
+    stash_texture.set_filter(FilterMode::Nearest);
+    carpet_texture.set_filter(FilterMode::Nearest);
+
     // Главный игровой цикл
     loop {
         let delta_time = get_frame_time();
@@ -184,7 +194,17 @@ async fn main() {
                 draw_rectangle_lines(0.0, 0.0, apt_width, apt_height, 5.0, WHITE);
                 
                 // Ковер 
-                draw_rectangle(work.x - 40.0, work.y - 40.0, 80.0, 80.0, BROWN); 
+                //draw_rectangle(work.x - 40.0, work.y - 40.0, 80.0, 80.0, BROWN); 
+                draw_texture_ex (
+                    &carpet_texture,
+                    work.x - 40.0,
+                    work.y - 40.0,
+                    WHITE,
+                    DrawTextureParams {
+                            dest_size: Some(vec2(128.0, 96.0)), // Размер спрайта на экране
+                            ..Default::default()
+                    },
+                );
                 draw_text("Carpet (Press E)", work.x - 35.0, work.y - 50.0, 16.0, LIGHTGRAY);
             }
             GameState::OnStreet => {
@@ -195,8 +215,18 @@ async fn main() {
                 draw_circle(500.0, 500.0, 30.0, GREEN);
                 draw_circle(1500.0, 800.0, 40.0, GREEN);
 
+                // Рисует клад
                 if !stash.is_found {
-                    draw_circle(stash.x, stash.y, 8.0, BLUE);
+                    draw_texture_ex(
+                        &stash_texture,
+                        stash.x - 16.0,Ы
+                        stash.y - 16.0, 
+                        WHITE,          
+                        DrawTextureParams {
+                            dest_size: Some(vec2(32.0, 32.0)),
+                            ..Default::default()
+                        },
+                    );
                 }
             }
         }
