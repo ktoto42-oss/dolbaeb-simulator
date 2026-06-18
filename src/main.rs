@@ -71,12 +71,12 @@ async fn main() {
     camera.zoom = vec2(2.0 / screen_width(), 2.0 / screen_height());
 
     // Текстуры 
-    //let player_texture: Texture2D = load_texture("assets/player.png").await.unwrap();
+    let player_texture: Texture2D = load_texture("assets/player.png").await.unwrap();
     let stash_texture: Texture2D = load_texture("assets/zip.png").await.unwrap();
     let carpet_texture: Texture2D = load_texture("assets/carpet.png").await.unwrap();
 
     // Отключение размытия т.к пиксель арт
-    //player_texture.set_filter(FilterMode::Nearest);
+    player_texture.set_filter(FilterMode::Nearest);
     stash_texture.set_filter(FilterMode::Nearest);
     carpet_texture.set_filter(FilterMode::Nearest);
 
@@ -84,6 +84,15 @@ async fn main() {
     loop {
         let delta_time = get_frame_time();
         timer += delta_time;
+
+        // Координаты курсора
+        let mouse_screen = mouse_position();
+        // Позиция в мире
+        let mouse_world = camera.screen_to_world(vec2(mouse_screen.0, mouse_screen.1));
+        // Вычисляем вектор от игрока к мыши
+        let direction = mouse_world - vec2(player.x, player.y);
+        // Находим угол в радианах.
+        let player_rotation = direction.y.atan2(direction.x);
 
         // Время идет - кайф и энергия падают
         player.high = (player.high - 2.0 * delta_time).max(0.0);
@@ -193,15 +202,14 @@ async fn main() {
                 // Стены квартиры (просто рамка)
                 draw_rectangle_lines(0.0, 0.0, apt_width, apt_height, 5.0, WHITE);
                 
-                // Ковер 
-                //draw_rectangle(work.x - 40.0, work.y - 40.0, 80.0, 80.0, BROWN); 
+                // Рисует ковер 
                 draw_texture_ex (
                     &carpet_texture,
-                    work.x - 40.0,
-                    work.y - 40.0,
+                    work.x - 64.0,
+                    work.y - 48.0,
                     WHITE,
                     DrawTextureParams {
-                            dest_size: Some(vec2(128.0, 96.0)), // Размер спрайта на экране
+                            dest_size: Some(vec2(128.0, 96.0)),
                             ..Default::default()
                     },
                 );
@@ -219,7 +227,7 @@ async fn main() {
                 if !stash.is_found {
                     draw_texture_ex(
                         &stash_texture,
-                        stash.x - 16.0,Ы
+                        stash.x - 16.0,
                         stash.y - 16.0, 
                         WHITE,          
                         DrawTextureParams {
@@ -231,8 +239,18 @@ async fn main() {
             }
         }
 
-        // Рисует игрока (зелёный круг) внутри игрового мира
-        draw_circle(player.x, player.y, 15.0, GREEN);
+        // Рисует игрока внутри игрового мира
+        draw_texture_ex(
+            &player_texture,
+            player.x - 16.0, 
+            player.y - 32.0,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(32.0, 64.0)),
+                rotation: player_rotation,
+                ..Default::default()
+            },
+        );
 
         // Смена камеры всё что ниже будет статично
         set_default_camera();
