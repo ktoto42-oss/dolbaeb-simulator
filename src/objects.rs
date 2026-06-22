@@ -2,6 +2,7 @@ use crate::player::Player;
 use crate::GameState;
 use macroquad::prelude::*;
 use crate::{STREET_WIDTH, STREET_HEIGHT};
+use crate::assets::Assets;
 
 // Структура клада
 pub struct Stash {
@@ -15,6 +16,11 @@ pub struct Work {
     pub x: f32,
     pub y: f32,
     pub is_complete: bool, 
+}
+
+pub struct Phone {
+    pub charge: f32,
+    pub is_get: bool,
 }
 
 impl Work {
@@ -41,6 +47,35 @@ impl Stash {
                 player.high = 100.0;
                 player.energy = 100.0;
             }
+        }
+    }
+}
+
+impl Phone {
+    pub fn update(&mut self, delta_time: f32) {
+        self.charge = (self.charge - 0.2 * delta_time).max(0.0);
+
+        if is_key_pressed(KeyCode::Q) {
+            self.is_get = match self.is_get {
+                true => false,
+                false => true,
+            };
+        }
+    }
+
+    pub fn draw(&self, assets: &Assets) {
+        if self.is_get {
+            draw_texture_ex (
+                &assets.telephone,
+                60.0,
+                screen_height() - 363.0,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(128.0, 256.0)),
+                    ..Default::default()
+                },
+            );
+            draw_text(&format!("{:.0}%", self.charge), 155.0, screen_height() - 345.0, 15.0, WHITE);
         }
     }
 }

@@ -50,6 +50,12 @@ async fn main() {
         is_complete: false,
     };
 
+    // Спавн телефона
+    let mut telephone = objects::Telephone {
+        charge: 100.0,
+        is_get: false,
+    };
+
     // Текущие состояние (дома или на улице)
     let mut state = GameState::InApartment;
 
@@ -82,6 +88,9 @@ async fn main() {
         // Обновление клада
         stash.update(&mut player, &state);
 
+        // Обновление телефона
+        telephone.update(delta_time);
+
         // Обновление КД 
         objects::update_cooldowns(&mut timer, &mut stash, &mut work);
 
@@ -101,10 +110,12 @@ async fn main() {
         world::draw_world(&state, &work, &stash, &assets);
 
         // Отрисовка игрока
-        player.draw(&assets.player);
+        player.draw(&assets);
 
         // Отрисовка UI
         ui::draw_ui(&state, &player);
+
+        telephone.draw(&assets);
 
         next_frame().await
     }

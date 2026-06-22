@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 use crate::GameState;
 use crate::{STREET_WIDTH, STREET_HEIGHT, APT_HEIGHT, APT_WIDTH};
+use crate::assets::Assets;
 // Структура игрока
 pub struct Player {
     pub x: f32,
@@ -74,15 +75,16 @@ impl Player {
     }
 
     // Отрисовка игрока
-    pub fn draw(&mut self, player_texture: &Texture2D) {
+    pub fn draw(&mut self, assets: &Assets) {
         draw_texture_ex(
-            player_texture,
+            &assets.player,
             self.x - 16.0, 
             self.y - 32.0,
             WHITE,
             DrawTextureParams {
                 dest_size: Some(vec2(32.0, 64.0)),
                 rotation: self.rotation,
+                pivot: Some(vec2(self.x, self.y)),
                 ..Default::default()
             },
         );
