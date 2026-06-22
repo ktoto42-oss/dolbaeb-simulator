@@ -66,7 +66,7 @@ impl Phone {
     pub fn draw(&self, assets: &Assets) {
         if self.is_get {
             draw_texture_ex (
-                &assets.telephone,
+                &assets.phone,
                 60.0,
                 screen_height() - 363.0,
                 WHITE,

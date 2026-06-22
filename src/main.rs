@@ -51,7 +51,7 @@ async fn main() {
     };
 
     // Спавн телефона
-    let mut telephone = objects::Telephone {
+    let mut phone = objects::Phone {
         charge: 100.0,
         is_get: false,
     };
@@ -89,7 +89,7 @@ async fn main() {
         stash.update(&mut player, &state);
 
         // Обновление телефона
-        telephone.update(delta_time);
+        phone.update(delta_time);
 
         // Обновление КД 
         objects::update_cooldowns(&mut timer, &mut stash, &mut work);
@@ -115,7 +115,7 @@ async fn main() {
         // Отрисовка UI
         ui::draw_ui(&state, &player);
 
-        telephone.draw(&assets);
+        phone.draw(&assets);
 
         next_frame().await
     }
