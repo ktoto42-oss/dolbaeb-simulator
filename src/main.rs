@@ -16,6 +16,9 @@ mod assets;
 // ОбЪекты
 mod objects;
 
+// NPC
+mod npc;
+
 #[macroquad::main("Dolbaeb simulator")]
 async fn main() {
     // Загрузка текстур
@@ -30,24 +33,7 @@ async fn main() {
         x: APT_WIDTH / 2.0,
         y: APT_HEIGHT / 2.0,
         speed: 200.0,
-        high: 50.0,
-        paranoia: 10.0,
-        energy: 80.0,
         rotation: 0.0,
-    };
-
-    // Спавн первого клада на улице
-    let mut stash = objects::Stash {
-        x: rand::gen_range(100.0, STREET_WIDTH - 100.0),
-        y: rand::gen_range(100.0, STREET_HEIGHT - 100.0),
-        is_found: false,
-    };
-
-    // Спавн работы (ковра) в центре квартиры
-    let mut work = objects::Work {
-        x: APT_WIDTH / 2.0,
-        y: APT_HEIGHT / 2.0,
-        is_complete: false,
     };
 
     // Спавн телефона
@@ -56,22 +42,27 @@ async fn main() {
         is_get: false,
     };
 
+    // Спавн врага
+    let mut enemy = npc::Enemy {
+        x: 200.0,
+        y: 400.0,
+        speed_patrol: 80.0,
+        speed_chase: 160.0,
+        rotation: 0.0,
+        state: npc::EnemyState::Patrol,
+        patrol_min_x: 0.0,
+        patrol_max_x: 400.0,
+        direction: 1.0,
+        vision_radius: 250.0,
+    };
+
     // Текущие состояние (дома или на улице)
     let mut state = GameState::InApartment;
-
-    // Таймер для кд 
-    let mut timer: f32 = 0.0;
 
     // Главный игровой цикл
     loop {
         // Дельта времени (надо для одиннаковой работы при разном фпс)
         let delta_time = get_frame_time();
-
-        // Увеличение таймера (+1 в секунду)
-        timer += delta_time;
-
-        // Обновление статов
-        player.update_stats(delta_time);
 
         // Управление
         player.handle_input(delta_time);
@@ -82,17 +73,11 @@ async fn main() {
         // Ограничение локации
         player.location_restriction(&state);
 
-        // Обновление работы
-        work.update(&mut player, &state);
-
-        // Обновление клада
-        stash.update(&mut player, &state);
-
         // Обновление телефона
         phone.update(delta_time);
 
-        // Обновление КД 
-        objects::update_cooldowns(&mut timer, &mut stash, &mut work);
+        // Обновление врага
+        enemy.update(&player, delta_time);
 
         // Смена локации
         world::handle_location_switch(&mut state, &mut player);
@@ -101,19 +86,22 @@ async fn main() {
         camera.target = vec2(player.x, player.y);
 
         // Отчистка фона
-        clear_background(world::get_bg_color(&player, &state));
+        clear_background(world::get_bg_color(&state));
 
         // Включение камеры (всё что ниже будет двигаться вместе с миром)
         set_camera(&camera);
 
         // Отрисовка мира
-        world::draw_world(&state, &work, &stash, &assets);
+        world::draw_world(&state);
+
+        // Отрисовка врагов
+        enemy.draw(&state);
 
         // Отрисовка игрока
         player.draw(&assets);
 
         // Отрисовка UI
-        ui::draw_ui(&state, &player);
+        ui::draw_ui();
 
         phone.draw(&assets);
 
