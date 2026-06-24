@@ -88,7 +88,7 @@ pub fn draw_pause_menu(assets: &Assets, selected_idx: usize) {
     );
     
     // Варианты в паузе
-    let options = ["ПРОДОЛЖИТЬ", "НАСТРОЙКИ", "В ГЛАВНОЕ МЕНЮ"];
+    let options = ["RESUME", "SETTINGS", "TO MAIN MENU"];
 
     // Отрисовка вариантов
     for (i, option) in options.iter().enumerate() {
