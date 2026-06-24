@@ -46,6 +46,7 @@ impl Player {
                 self.x = self.x.clamp(0.0, STREET_WIDTH);
                 self.y = self.y.clamp(0.0, STREET_HEIGHT);
             }
+            _ => {}
         }
     }
 

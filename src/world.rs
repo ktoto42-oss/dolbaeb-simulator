@@ -6,6 +6,8 @@ use macroquad::prelude::*;
 pub enum GameState {
     InApartment,
     OnStreet,
+    MainMenu,
+    Settings,
 }
 
 // Настройки размеров локаций (Границы мира)
@@ -28,6 +30,7 @@ pub fn handle_location_switch(state: &mut GameState, player: &mut Player) {
                 player.y = APT_HEIGHT / 2.0;
                 GameState::InApartment
             }
+            _ => todo!()
         };
     }
 }
@@ -38,6 +41,7 @@ pub fn get_bg_color(state: &GameState) -> Color  {
     let bg_color = match state {
         GameState::InApartment => DARKGRAY,
         GameState::OnStreet => Color::new(0.1, 0.12, 0.1, 1.0),
+        _ => BLACK,
     };
     
 
@@ -59,5 +63,6 @@ pub fn draw_world(state: &GameState) {
             draw_circle(500.0, 500.0, 30.0, GREEN);
             draw_circle(1500.0, 800.0, 40.0, GREEN);
         }
+        _ => {}
     }
 }

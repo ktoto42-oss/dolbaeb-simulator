@@ -56,55 +56,175 @@ async fn main() {
         vision_radius: 250.0,
     };
 
-    // Текущие состояние (дома или на улице)
-    let mut state = GameState::InApartment;
+    // Состояние (в меня по дефолту)
+    let mut state = GameState::MainMenu;
+    
+    // Флаг паузы
+    let mut is_paused = false;
+
+    // Состояния меню и настроек
+    let mut state = GameState::MainMenu;
+    let mut previous_state = GameState::MainMenu;
+    let mut is_paused = false;
+
+    // Индексы выбранных пунктов для каждого меню
+    let mut menu_idx = 0;
+    let mut pause_idx = 0;
+    let mut settings_idx = 0;
+
+    // Текущие настройки (флаги)
+    let mut fullscreen = false;
+    let mut sound_on = true;
 
     // Главный игровой цикл
     loop {
-        // Дельта времени (надо для одиннаковой работы при разном фпс)
+        // Делбта времени (чтобы игра работала одинаково при разно фпс)
         let delta_time = get_frame_time();
 
-        // Управление
-        player.handle_input(delta_time);
+        match state {
+            GameState::MainMenu => {
+                // Отрисовка меняю
+                ui::draw_main_menu(&assets, menu_idx);
+                
+                // Навигация (W - вверх A или S - вниз)
+                if is_key_pressed(KeyCode::W) {
+                    menu_idx = if menu_idx == 0 { 2 } else { menu_idx - 1 };
+                }
+                if is_key_pressed(KeyCode::S) {
+                    menu_idx = if menu_idx == 2 { 0 } else { menu_idx + 1 };
+                }
 
-        // Вращение
-        player.update_rotation(&camera);
+                // Подтверждение
+                if is_key_pressed(KeyCode::Enter) {
+                    match menu_idx {
+                        0 => { state = GameState::InApartment; } // Старт игры
+                        1 => { // В настройки
+                            previous_state = GameState::MainMenu; 
+                            state = GameState::Settings; 
+                            settings_idx = 0; 
+                        }
+                        2 => { break; } // Выход
+                        _ => {}
+                    }
+                }
+            }
 
-        // Ограничение локации
-        player.location_restriction(&state);
+            GameState::Settings => {
+                // Отрисовка настроек
+                ui::draw_settings_menu(&assets, settings_idx, fullscreen, sound_on);
 
-        // Обновление телефона
-        phone.update(delta_time);
+                // Навигация в настройках
+                if is_key_pressed(KeyCode::W) {
+                    settings_idx = if settings_idx == 0 { 2 } else { settings_idx - 1 };
+                }
+                if is_key_pressed(KeyCode::S) {
+                    settings_idx = if settings_idx == 2 { 0 } else { settings_idx + 1 };
+                }
 
-        // Обновление врага
-        enemy.update(&player, delta_time);
+                // Подтверждение
+                if is_key_pressed(KeyCode::Enter) {
+                    match settings_idx {
+                        0 => {
+                            fullscreen = !fullscreen;
+                            set_fullscreen(fullscreen); // Переключение на фулл скрин
+                        }
+                        1 => {
+                            sound_on = !sound_on; // Переключатель звука (пока заглушка)
+                        }
+                        2 => {
+                            state = previous_state; // Возвращение туда откуда вызванно
+                        }
+                        _ => {}
+                    }
+                }
 
-        // Смена локации
-        world::handle_location_switch(&mut state, &mut player);
+                // Возвращение туда откуда вызванно (на esc)
+                if is_key_pressed(KeyCode::Escape) {
+                    state = previous_state;
+                }
+            }
 
-        // Камера центрируется на игроке с учетом размеров экрана
-        camera.target = vec2(player.x, player.y);
+            _ => {                
+                // Нажатие ESC вызывает или закрывает паузу
+                if is_key_pressed(KeyCode::Escape) {
+                    is_paused = !is_paused;
+                    pause_idx = 0; // Сброс стрелки паузы на первый пункт
+                }
 
-        // Отчистка фона
-        clear_background(world::get_bg_color(&state));
+                // Отработка паузы
+                if is_paused {
+                    ui::draw_pause_menu(&assets, pause_idx);
 
-        // Включение камеры (всё что ниже будет двигаться вместе с миром)
-        set_camera(&camera);
+                    // Навигация в паузе
+                    if is_key_pressed(KeyCode::W) {
+                        pause_idx = if pause_idx == 0 { 2 } else { pause_idx - 1 };
+                    }
+                    if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::S) {
+                        pause_idx = if pause_idx == 2 { 0 } else { pause_idx + 1 };
+                    }
 
-        // Отрисовка мира
-        world::draw_world(&state);
+                    // Подтверждение 
+                    if is_key_pressed(KeyCode::Enter) {
+                        match pause_idx {
+                            0 => { is_paused = false; } // Продолжить
+                            1 => { 
+                                previous_state = state; // Текущая локация
+                                state = GameState::Settings; // Переключение на настройки
+                                settings_idx = 0;
+                            }
+                            2 => { 
+                                // Выход в главное меню
+                                state = GameState::MainMenu;
+                                is_paused = false;
+                                menu_idx = 0;
 
-        // Отрисовка врагов
-        enemy.draw(&state);
+                                player.x = APT_WIDTH / 2.0;
+                                player.y = APT_HEIGHT / 2.0;
+                                enemy.x = 200.0;
+                                enemy.y = 400.0;
+                                enemy.state = npc::EnemyState::Patrol;
+                            }
+                            _ => {}
+                        }
+                    }
+                }
 
-        // Отрисовка игрока
-        player.draw(&assets);
+                // Обновление игры
+                if !is_paused {
+                    player.handle_input(delta_time);
+                    player.update_rotation(&camera);
+                    player.location_restriction(&state);
+                    phone.update(delta_time);
+                    enemy.update(&player, delta_time);
+                    world::handle_location_switch(&mut state, &mut player);
+                    camera.target = vec2(player.x, player.y);
+                }
 
-        // Отрисовка UI
-        ui::draw_ui();
+                // Отрисовка мира 
+                let target_visible_height = 600.0;
+                let zoom_y = 2.0 / target_visible_height;
+                let zoom_x = zoom_y * (screen_height() / screen_width());
+                camera.zoom = vec2(zoom_x, zoom_y);
 
-        phone.draw(&assets);
+                clear_background(world::get_bg_color(&state));
 
+                set_camera(&camera);
+                world::draw_world(&state);
+                enemy.draw(&state);
+                player.draw(&assets);
+
+                // Статичный интерфейс
+                ui::draw_ui();
+                phone.draw(&assets);
+                
+                // Повторыный вызов паузы чтобы она перекрывала интерфейс
+                if is_paused {
+                    ui::draw_pause_menu(&assets, pause_idx);
+                }
+            }
+        }
         next_frame().await
     }
 }
+
+

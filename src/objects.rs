@@ -33,7 +33,17 @@ impl Phone {
                     ..Default::default()
                 },
             );
-            draw_text(&format!("{:.0}%", self.charge), 155.0, screen_height() - 345.0, 15.0, WHITE);
+            draw_text_ex(
+                &format!("{:.0}%", self.charge),
+                155.0,
+                screen_height() - 345.0,
+                TextParams {
+                    font: Some(&assets.font),
+                    font_size: 16,
+                    color: WHITE,
+                    ..Default::default()
+                }
+            );
         }
     }
 }
