@@ -21,7 +21,8 @@ impl Phone {
     }
 
     // Отрисовка
-    pub fn draw(&self, assets: &Assets) {
+    pub fn draw(&self, assets: &Assets, font_idx: usize) {
+        let current_font = assets.get_font(font_idx);
         if self.is_get {
             draw_texture_ex (
                 &assets.phone,
@@ -38,7 +39,7 @@ impl Phone {
                 155.0,
                 screen_height() - 345.0,
                 TextParams {
-                    font: Some(&assets.font),
+                    font: Some(current_font),
                     font_size: 16,
                     color: WHITE,
                     ..Default::default()

@@ -75,18 +75,19 @@ async fn main() {
     // Текущие настройки (флаги)
     let mut fullscreen = false;
     let mut sound_on = true;
+    let mut font_idx = 0;
 
     // Главный игровой цикл
     loop {
-        // Делбта времени (чтобы игра работала одинаково при разно фпс)
+        // Дельта времени (чтобы игра работала одинаково при разно фпс)
         let delta_time = get_frame_time();
 
         match state {
             GameState::MainMenu => {
-                // Отрисовка меняю
-                ui::draw_main_menu(&assets, menu_idx);
+                // Отрисовка меню
+                ui::draw_main_menu(&assets, menu_idx, font_idx);
                 
-                // Навигация (W - вверх A или S - вниз)
+                // Навигация (W - вверх S - вниз)
                 if is_key_pressed(KeyCode::W) {
                     menu_idx = if menu_idx == 0 { 2 } else { menu_idx - 1 };
                 }
@@ -111,28 +112,35 @@ async fn main() {
 
             GameState::Settings => {
                 // Отрисовка настроек
-                ui::draw_settings_menu(&assets, settings_idx, fullscreen, sound_on);
+                ui::draw_settings_menu(&assets, settings_idx, font_idx, fullscreen, sound_on);
 
                 // Навигация в настройках
                 if is_key_pressed(KeyCode::W) {
-                    settings_idx = if settings_idx == 0 { 2 } else { settings_idx - 1 };
+                    settings_idx = if settings_idx == 0 { 3 } else { settings_idx - 1 };
                 }
                 if is_key_pressed(KeyCode::S) {
-                    settings_idx = if settings_idx == 2 { 0 } else { settings_idx + 1 };
+                    settings_idx = if settings_idx == 3 { 0 } else { settings_idx + 1 };
                 }
 
                 // Подтверждение
                 if is_key_pressed(KeyCode::Enter) {
                     match settings_idx {
                         0 => {
+                            // Переключение на фулл скрин
                             fullscreen = !fullscreen;
-                            set_fullscreen(fullscreen); // Переключение на фулл скрин
+                            set_fullscreen(fullscreen);
                         }
                         1 => {
-                            sound_on = !sound_on; // Переключатель звука (пока заглушка)
+                            // Выключение звука
+                            sound_on = !sound_on; 
                         }
                         2 => {
-                            state = previous_state; // Возвращение туда откуда вызванно
+                            // Переключение шрифта
+                            font_idx = if font_idx == 3 { 0 } else { font_idx + 1 };
+                        }
+                        3 => {
+                            // Возвращение туда откуда вызванно
+                            state = previous_state;
                         }
                         _ => {}
                     }
@@ -153,13 +161,13 @@ async fn main() {
 
                 // Отработка паузы
                 if is_paused {
-                    ui::draw_pause_menu(&assets, pause_idx);
+                    ui::draw_pause_menu(&assets, pause_idx, font_idx);
 
                     // Навигация в паузе
                     if is_key_pressed(KeyCode::W) {
                         pause_idx = if pause_idx == 0 { 2 } else { pause_idx - 1 };
                     }
-                    if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::S) {
+                    if is_key_pressed(KeyCode::S) {
                         pause_idx = if pause_idx == 2 { 0 } else { pause_idx + 1 };
                     }
 
@@ -215,11 +223,11 @@ async fn main() {
 
                 // Статичный интерфейс
                 ui::draw_ui();
-                phone.draw(&assets);
+                phone.draw(&assets, font_idx);
                 
                 // Повторыный вызов паузы чтобы она перекрывала интерфейс
                 if is_paused {
-                    ui::draw_pause_menu(&assets, pause_idx);
+                    ui::draw_pause_menu(&assets, pause_idx, font_idx);
                 }
             }
         }
